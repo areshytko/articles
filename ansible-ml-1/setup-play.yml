@@ -1,0 +1,86 @@
+- hosts: localhost
+  name: Setup Infrastructure and Provision Environment
+  remote_user: ubuntu
+  gather_facts: False
+
+  tasks:
+    - include_vars: config.yaml
+
+    - name: Create placement group
+      ec2_placement_group:
+        name: dl-cluster-pg
+        region: "{{ region }}"
+        strategy: cluster
+
+    - name: Create Sequrity Group
+      ec2_group:
+        name: dl-cluster-sg
+        description: security group for deep learning cluster
+        vpc_id: "{{ vpc_id }}"
+        region: "{{ region }}"
+        rules:
+          - proto: all
+            group_name: dl-cluster-sg
+          - proto: tcp
+            ports:
+              - 22
+            cidr_ip: 0.0.0.0/0
+
+    - name: Create ec2 instances
+      ec2:
+        key_name: "{{ aws_ssh_key }}"
+        group: dl-cluster-sg
+        placement_group: dl-cluster-pg
+        instance_type: "{{ instance_type }}"
+        image: "{{ ami_id }}"
+        wait: true
+        exact_count: "{{ instance_count }}"
+        region: "{{ region }}"
+        zone: "{{ zone }}"
+        count_tag:
+          managed_by: ansible
+          name: "{{ instance_tag }}"
+        instance_tags:
+          managed_by: ansible
+          name: "{{ instance_tag }}"
+      register: ec2
+
+    - name: Get master node private ip
+      set_fact:
+        master_node: "{{ ec2.instances.0.private_ip }}"
+
+    - name: Write SSH config file
+      shell: |
+        echo "Host worker{{ item_idx }}" >> ssh_config
+        echo "   User ubuntu" >> ssh_config
+        echo "   Hostname {{ item.public_ip }} " >> ssh_config
+        echo >> ssh_config
+      loop: "{{ ec2.instances }}"
+      loop_control:
+        index_var: item_idx
+
+    - name: Add all instance public IPs to host group
+      add_host: hostname={{ item.public_dns_name }} groups=aws_ec2
+      loop: "{{ ec2.instances }}"
+
+    - name: Wait for SSH to come up
+      delegate_to: "{{ item.public_dns_name }}"
+      wait_for_connection:
+        delay: 60
+        timeout: 320
+      loop: "{{ ec2.instances }}"
+
+- hosts: aws_ec2
+  name: Configure connectivity
+  remote_user: ubuntu
+  gather_facts: true
+
+  tasks:
+    - name: Setup environment for PyTorch connectivity
+      shell: |
+        echo "export NODE_RANK={{ groups['aws_ec2'].index(inventory_hostname) }}" >> /home/ubuntu/.bash_profile
+        echo "export WORLD_SIZE={{ groups['aws_ec2']|length }}" >> /home/ubuntu/.bash_profile
+        echo "export MASTER_ADDR={{ hostvars['localhost']['master_node'] }}" >> /home/ubuntu/.bash_profile
+        echo "export MASTER_PORT=33333" >> /home/ubuntu/.bash_profile
+
+- import_playbook: environment-play.yml

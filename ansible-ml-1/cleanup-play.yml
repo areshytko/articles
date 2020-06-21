@@ -1,0 +1,22 @@
+- name: Upload results
+  hosts: aws_ec2
+  remote_user: ubuntu
+
+  tasks:
+    - include_vars: config.yaml
+
+    - name: Terminate ec2 instances
+      ec2_instance:
+        state: absent
+        region: "{{ region }}"
+        filters:
+          tag:name: "{{ instance_tag }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Cleanup ssh config file
+      file:
+        state: absent
+        path: ssh_config
+      delegate_to: localhost
+      run_once: true

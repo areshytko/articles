@@ -1,0 +1,23 @@
+- name: Setup environment for experiment
+  hosts: aws_ec2
+  remote_user: ubuntu
+
+  tasks:
+    - include_vars: config.yaml
+
+    - name: Install virtualenv
+      pip:
+        executable: "pip{{python.version}}"
+        name: virtualenv
+      become: true
+
+    - name: Copy requirements.txt
+      copy:
+        src: ddp_train_example.requirements.txt
+        dest: /home/ubuntu/requirements.txt
+
+    - name: Install experiment python dependencies
+      pip:
+        virtualenv_python: "python{{python.version}}"
+        virtualenv: "{{ python.virtualenv }}"
+        requirements: /home/ubuntu/requirements.txt
