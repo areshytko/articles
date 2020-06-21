@@ -1,0 +1,11 @@
+python:
+  version: 3.6
+  virtualenv: /home/ubuntu/.venv
+
+install_packages:
+  - ipython
+  - jupyterlab
+  - tensorboard==2.2.1
+  - awscli
+
+tensorboard_logdir: null

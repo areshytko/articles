@@ -1,0 +1,38 @@
+- name: Install virtualenv
+  pip:
+    executable: "pip{{python.version}}"
+    name: virtualenv
+  become: true
+
+- name: Install ipython, jupyter,
+  pip:
+    virtualenv_python: "python{{python.version}}"
+    virtualenv: "{{ python.virtualenv }}"
+    name: "{{ install_packages }}"
+
+- name: Register ipython kernel
+  shell: "{{python.virtualenv}}/bin/ipython kernel install --user --name=.venv"
+
+- name: Start Jupyter server
+  shell: nohup {{python.virtualenv}}/bin/jupyter lab --ip={{inventory_hostname}} --port=8888 --no-browser > jupyter.log 2>&1 &
+- name: Wait until jupyter server is started
+  wait_for:
+    path: jupyter.log
+    search_regex: "Jupyter Notebook is running"
+- name: Get jupyter server logs
+  shell: cat jupyter.log
+  register: jupyter_output
+- debug:
+    var: jupyter_output.stdout_lines
+
+- name: Start Tensorboard
+  shell: nohup {{python.virtualenv}}/bin/tensorboard --logdir {{ tensorboard_logdir }} --host {{inventory_hostname}} --port 6001 > tensorboard.log 2>&1 &
+- name: Wait until TensorBoard server is started
+  wait_for:
+    path: tensorboard.log
+    search_regex: "TensorBoard"
+- name: Get TensorBoard server logs
+  shell: cat tensorboard.log
+  register: tensorboard_output
+- debug:
+    var: tensorboard_output.stdout_lines

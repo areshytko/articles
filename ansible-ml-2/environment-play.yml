@@ -1,0 +1,10 @@
+- name: Setup environment for experiment
+  hosts: aws_ec2
+  remote_user: ubuntu
+  vars_files:
+    - vars/main.yml
+
+  roles:
+    - role: experiment_environment
+      vars:
+        requirements_file: "{{ experiment.requirements_file }}"

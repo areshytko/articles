@@ -1,0 +1,10 @@
+- name: Check if source dir exists
+  stat:
+    path: "{{ src_dir }}"
+  register: src_dir_stat
+
+- name: Upload results to S3
+  shell: |
+    DST_DIR=$(python -c "import time; print('{{ dst_dir }}/' + time.strftime('%Y-%m-%d-%H-%M'))");
+    aws s3 cp {{ src_dir }} s3://{{ dst_bucket }}/${DST_DIR} --recursive --exclude ".git/*" --exclude "__pycache__/*"
+  when: src_dir_stat.stat.exists == true

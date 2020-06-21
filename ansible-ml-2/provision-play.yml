@@ -1,0 +1,23 @@
+- name: "Provisioning of basic environment for python and jupyter server"
+  hosts: aws_ec2
+  remote_user: ubuntu
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Mount provided volumes
+      include_role:
+        name: ebs_volume
+
+    - name: Optionally, install python
+      include_role:
+        name: install_python
+      vars:
+        python_version: "{{ python.version }}"
+      when: python.install
+
+    - name: Setup basic ML environment
+      include_role:
+        name: basic_ml_environment
+      vars:
+        tensorboard_logdir: "{{ experiment.results.dir }}"

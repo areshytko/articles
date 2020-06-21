@@ -1,0 +1,9 @@
+- name: Get all unmounted drives
+  shell: lsblk --json | jq -r ' .blockdevices[] | select(.children? == null and .mountpoint == null) | "/dev/" + .name'
+  register: devices
+
+- name: Loop through the attached volumes
+  include_tasks: "volume.yml"
+  with_indexed_items: "{{ devices.stdout_lines }}"
+  loop_control:
+    loop_var: "device"

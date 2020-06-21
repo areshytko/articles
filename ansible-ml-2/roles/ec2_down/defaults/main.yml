@@ -1,0 +1,4 @@
+ec2_cluster:
+  region: null
+  instance_tag: dl-experiment
+  ssh_config_path: ssh-config

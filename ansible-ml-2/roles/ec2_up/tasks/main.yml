@@ -1,0 +1,67 @@
+- name: Create placement group
+  ec2_placement_group:
+    name: dl-cluster-pg
+    region: "{{ ec2_cluster.region }}"
+    strategy: cluster
+
+- name: Create Sequrity Group
+  ec2_group:
+    name: dl-cluster-sg
+    description: security group for deep learning cluster
+    vpc_id: "{{ ec2_cluster.vpc_id }}"
+    region: "{{ ec2_cluster.region }}"
+    rules:
+      - proto: all
+        group_name: dl-cluster-sg
+      - proto: tcp
+        ports:
+          - 8888
+          - 6001
+          - 22
+        cidr_ip: 0.0.0.0/0
+
+- name: Create ec2 instances
+  ec2:
+    key_name: "{{ ec2_cluster.aws_ssh_key }}"
+    group: dl-cluster-sg
+    placement_group: dl-cluster-pg
+    instance_type: "{{ ec2_cluster.instance_type }}"
+    instance_profile_name: "{{ ec2_cluster.iam_role }}"
+    image: "{{ ec2_cluster.ami_id }}"
+    wait: true
+    exact_count: "{{ ec2_cluster.instance_count }}"
+    region: "{{ ec2_cluster.region }}"
+    zone: "{{ ec2_cluster.zone }}"
+    volumes: "{{ ec2_cluster.volumes }}"
+    count_tag:
+      managed_by: ansible
+      name: "{{ ec2_cluster.instance_tag }}"
+    instance_tags:
+      managed_by: ansible
+      name: "{{ ec2_cluster.instance_tag }}"
+  register: ec2
+
+- name: Get master node private ip
+  set_fact:
+    master_node: "{{ ec2.instances.0.private_ip }}"
+
+- name: Write SSH config file
+  shell: |
+    echo "Host worker{{ item_idx }}" >> {{ ec2_cluster.ssh_config_path }}
+    echo "   User ubuntu" >> {{ ec2_cluster.ssh_config_path }}
+    echo "   Hostname {{ item.public_ip }} " >> {{ ec2_cluster.ssh_config_path }}
+    echo >> {{ ec2_cluster.ssh_config_path }}
+  loop: "{{ ec2.instances }}"
+  loop_control:
+    index_var: item_idx
+
+- name: Add all instance public IPs to host group
+  add_host: hostname={{ item.public_dns_name }} groups=aws_ec2
+  loop: "{{ ec2.instances }}"
+
+- name: Wait for SSH to come up
+  delegate_to: "{{ item.public_dns_name }}"
+  wait_for_connection:
+    delay: 60
+    timeout: 320
+  loop: "{{ ec2.instances }}"

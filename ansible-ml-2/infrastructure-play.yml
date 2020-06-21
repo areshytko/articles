@@ -1,0 +1,19 @@
+- hosts: localhost
+  name: Setup Infrastructure and Provision Environment
+  remote_user: ubuntu
+  gather_facts: false
+  vars_files:
+    - vars/main.yml
+
+  roles:
+    - role: ec2_up
+
+- hosts: aws_ec2
+  name: Configure connectivity
+  remote_user: ubuntu
+  gather_facts: true
+
+  roles:
+    - role: pytorch_connectivity
+      vars:
+        master_node: "{{ hostvars['localhost']['master_node'] }}"

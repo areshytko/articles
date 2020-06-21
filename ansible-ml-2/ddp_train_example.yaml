@@ -1,0 +1,4 @@
+gpus: 1
+num_nodes: 2
+distributed_backend: ddp
+max_epochs: 30

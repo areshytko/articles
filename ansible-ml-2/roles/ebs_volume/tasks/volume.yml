@@ -1,0 +1,29 @@
+- name: Create volume partition
+  parted:
+    device: "{{ device.1 }}"
+    name: "{{ device.1.split('/') | last }}p1"
+    number: 1
+    label: gpt
+    state: present
+  become: true
+
+- name: Create file system
+  filesystem:
+    fstype: ext4
+    dev: "{{ device.1 }}p1"
+  become: true
+
+- name: Mount volume
+  mount:
+    fstype: ext4
+    src: "{{ device.1 }}p1"
+    path: "/data{{ device.0 }}"
+    state: mounted
+  become: true
+
+- name: Add user permissions
+  file:
+    path: "/data{{ device.0 }}"
+    mode: a+rwx
+    state: directory
+  become: true

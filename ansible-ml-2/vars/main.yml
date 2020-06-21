@@ -1,0 +1,41 @@
+ec2_cluster:
+  # registered ssh key to use. Use you default id_rsa.pub or modify the code
+  aws_ssh_key: areshytko
+  ami_id: ami-0163b0951ed4a6b22 # Deep Learning Base AMI (Ubuntu 18.04) Version 23.0
+  # ami_id: ami-061aaaac62de85935 # Deep Learning AMI (Ubuntu 18.04) Version 28.1
+  instance_count: 2
+  instance_type: g4dn.xlarge
+  region: eu-central-1
+  zone: eu-central-1b
+  # VPC to run EC2 instances in (most of the time fill id of default VPC here)
+  vpc_id: vpc-b53afadf
+  # IAM role with S3 full access
+  iam_role: s3-full-access-role
+  # tag to identify instances for cleanup
+  instance_tag: dl-experiment
+
+  # list of EBS volumes to attach:
+  # see ec2 module documentation
+  # for example:
+  # volumes:
+  #   - device_name: /dev/sdf
+  #     volume_type: gp2
+  #     volume_size: 70
+  #     delete_on_termination: true
+  volumes: []
+
+  # where to save generated ssh_config file to access creted nodes
+  ssh_config_path: ssh_config
+
+python:
+  install: false
+  version: 3.6
+  virtualenv: /home/ubuntu/.venv
+
+experiment:
+  name: experiment-2
+  requirements_file: ddp_train_example.requirements.txt
+  results:
+    save: true
+    dir: /home/ubuntu/result/
+    bucket: fsx-test-wla

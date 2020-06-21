@@ -1,0 +1,19 @@
+- name: Upload results
+  hosts: aws_ec2
+  remote_user: ubuntu
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Upload results to S3
+      include_role:
+        name: s3_upload
+      vars:
+        src_dir: "{{ experiment.results.dir }}"
+        dst_dir: "{{ experiment.name }}"
+        dst_bucket: "{{ experiment.results.bucket }}"
+      when: experiment.results.save
+
+    - name: Terminate ec2 instances
+      include_role:
+        name: ec2_down

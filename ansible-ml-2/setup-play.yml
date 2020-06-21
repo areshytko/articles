@@ -1,0 +1,3 @@
+- import_playbook: infrastructure-play.yml
+- import_playbook: provision-play.yml
+- import_playbook: environment-play.yml

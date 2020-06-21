@@ -1,0 +1,27 @@
+ec2_cluster:
+  # registered ssh key to use. Use you default id_rsa.pub or modify the code
+  aws_ssh_key: null
+  ami_id: null
+
+  instance_count: null
+  instance_type: g4dn.xlarge
+  region: null
+  zone: null
+  # VPC to run EC2 instances in (most of the time fill id of default VPC here)
+  vpc_id: null
+  # IAM role with S3 full access
+  iam_role: null
+  # tag to identify instances for cleanup
+  instance_tag: dl-experiment
+
+  # list of EBS volumes to attach:
+  # see ec2 module documentation
+  # for example:
+  # volumes:
+  #   - device_name: /dev/sdf
+  #     volume_type: gp2
+  #     volume_size: 70
+  #     delete_on_termination: true
+  volumes: []
+
+  ssh_config_path: ssh_config

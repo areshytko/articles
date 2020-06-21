@@ -1,0 +1,9 @@
+- name: Check if master node
+  shell: source ~/.bash_profile && echo $NODE_RANK
+  args:
+    executable: /bin/bash
+  register: node_rank
+
+- name: Upload results from master node to S3
+  include_tasks: s3-upload.yml
+  when: node_rank.stdout == '0'

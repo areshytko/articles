@@ -1,0 +1,10 @@
+- name: Copy requirements.txt
+  copy:
+    src: "{{ requirements_file }}"
+    dest: /home/ubuntu/requirements.txt
+
+- name: Install experiment python dependencies
+  pip:
+    virtualenv_python: "python{{python.version}}"
+    virtualenv: "{{ python.virtualenv }}"
+    requirements: /home/ubuntu/requirements.txt

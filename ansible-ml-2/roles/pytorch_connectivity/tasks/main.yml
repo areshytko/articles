@@ -1,0 +1,6 @@
+- name: Setup environment for PyTorch connectivity
+  shell: |
+    echo "export NODE_RANK={{ groups['aws_ec2'].index(inventory_hostname) }}" >> /home/ubuntu/.bash_profile
+    echo "export WORLD_SIZE={{ groups['aws_ec2']|length }}" >> /home/ubuntu/.bash_profile
+    echo "export MASTER_ADDR={{ master_node }}" >> /home/ubuntu/.bash_profile
+    echo "export MASTER_PORT=33333" >> /home/ubuntu/.bash_profile
