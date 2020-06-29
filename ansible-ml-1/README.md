@@ -1,6 +1,6 @@
 # Distributed deep learning experiments with Ansible, AWS and Pytorch Lightning. Part 1
 
-source code materials for the blog article
+source code materials for the [blog article](https://towardsdatascience.com/distributed-deep-learning-with-ansible-aws-and-pytorch-lightning-part-1-91d500e1039f)
 
 ### To run:
 
